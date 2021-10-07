@@ -1,0 +1,225 @@
+#Necessary Modules
+import pygame
+import sys
+import random
+import time
+#Initialize
+pygame.init()
+#Variables
+screen_width=800
+screen_height=800
+#Pygame Functions
+screen=pygame.display.set_mode((screen_width,screen_height))
+pygame.display.set_caption("Ground Assault.io")
+bg=pygame.image.load(r'C:\Users\shwet\OneDrive\Desktop\skoolofcode\man vs enemy\bg.jpg')
+bg=pygame.transform.scale(bg,(screen_width,screen_height))
+font=pygame.font.SysFont("Times New Roman",20)
+#laser class
+class Laser_enemy(pygame.sprite.Sprite):
+    def __init__(self,x_pos,y_pos):
+        super().__init__()
+        self.image=pygame.image.load(r"C:\Users\shwet\OneDrive\Desktop\skoolofcode\man vs enemy\Laser.png")
+        self.image=pygame.transform.scale(self.image, (10,10))
+        self.image=pygame.transform.rotate(self.image,90)
+        self.rect=self.image.get_rect()
+        self.rect.x=x_pos
+        self.rect.y=y_pos
+        self.speed=random.randint(3,7)
+
+    def update(self):
+        self.kill()
+    def move(self):
+        if self.rect.x<850:
+            self.rect.x=self.rect.x+self.speed
+#enemy class        
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image=pygame.image.load(r"C:\Users\shwet\OneDrive\Desktop\skoolofcode\man vs enemy\shooter1.png")
+        self.image=pygame.transform.scale(self.image, (70,70))
+        self.rect=self.image.get_rect()
+        self.x_pos=[10,60,110,160,210,260,310,360,410]
+        self.rect.x=random.choice(self.x_pos)
+        self.y_pos=[400,450,500,550,600,650,700]
+        self.rect.y=random.choice(self.y_pos)
+
+    def update(self):
+        self.kill()
+        
+#player class
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image=pygame.image.load(r"C:\Users\shwet\OneDrive\Desktop\skoolofcode\man vs enemy\shooter1.png")
+        self.image=pygame.transform.scale(self.image, (50,50))
+        self.image=pygame.transform.flip(self.image,True,False)
+        self.rect=self.image.get_rect()
+        self.rect.x=0
+        self.rect.y=0
+    def update(self):
+        self.kill()
+#player laser class
+class Laser_player(pygame.sprite.Sprite):
+    def __init__(self,x_pos,y_pos):
+        super().__init__()
+        self.image=pygame.image.load(r"C:\Users\shwet\OneDrive\Desktop\skoolofcode\man vs enemy\Laser.png")
+        self.image=pygame.transform.scale(self.image, (10,10))
+        self.image=pygame.transform.rotate(self.image,270)
+        self.rect=self.image.get_rect()
+        self.rect.x=x_pos
+        self.rect.y=y_pos
+        
+    def clear(self):
+        self.kill()
+        
+        
+#run the enemy laser
+all_sprite=pygame.sprite.Group()
+laser_enemy_group=pygame.sprite.Group()
+enemy_group=pygame.sprite.Group()
+player_group=pygame.sprite.Group()
+player_laser=pygame.sprite.Group()
+#laser defintion
+def create_laser():
+    laser=Laser_enemy((enemy.rect.x+60),(enemy.rect.y+5))
+    laser_enemy_group.add(laser)
+    all_sprite.add(laser)
+    return laser
+#enemy definition
+def create_enemy():
+    enemy=Enemy()
+    all_sprite.add(enemy)
+    enemy_group.add(enemy)
+    return enemy
+def player():
+    player=Player()
+    all_sprite.add(player)
+    player_group.add(player)
+    return player
+def player_laser2():
+    laser2=Laser_player(player.rect.x,player.rect.y)
+    all_sprite.add(laser2)
+    player_laser.add(laser2)
+    return laser2
+#autorun all of objects
+enemy=create_enemy()
+laser=create_laser()
+player=player()
+laser2=player_laser2()
+
+# User defined events
+ADD_enemy=pygame.USEREVENT + 1
+pygame.time.set_timer(ADD_enemy,1500)
+
+
+
+
+hit_count=0        
+start_time=int(time.time())
+#--------Add -----These ----variables-----#
+enemy_player_count=0
+enemy_count_width=10
+life=20
+life_width=10
+player_speed_x=0
+player_speed_y=0
+start=True
+#------------------------------------------
+while True:
+    current_time=int(time.time())
+    timer=current_time-start_time
+    
+    # creating timer for enemy movement
+    if timer>=4 and timer<=10:
+        enemy.rect.x=enemy.rect.x+1
+   
+    screen.blit(bg, (0,0))
+    for event in pygame.event.get():
+        if event.type==pygame.QUIT:
+            pygame.quit()
+            sys.exit()
+        if event.type==pygame.KEYDOWN:
+            #right arrow
+            if event.key==pygame.K_RIGHT:
+                
+                player_speed_x=random.randint(1,2)
+                player_speed_y=0
+            if event.key==pygame.K_l:
+                if life>0:
+                    laser2.clear()
+                    laser2=player_laser2()
+                
+            #left arrow
+            if event.key==pygame.K_LEFT:
+                player_speed_x=-(random.randint(1,2))
+                player_speed_y=0
+            #up arrow
+            if event.key==pygame.K_DOWN:
+                player_speed_y=random.randint(1,2)
+                player_speed_x=0
+            if event.key==pygame.K_UP:
+                player_speed_y=-(random.randint(1,2))
+                player_speed_x=0
+        if event.type==pygame.KEYUP:
+            player_speed_x=0
+            player_speed_y=0
+                
+        if event.type==ADD_enemy:
+            if timer%5==0 or timer%3==0:
+                enemy.update()
+                enemy_player_count=enemy_player_count+1
+             #--------------------Add Enemy Laser---------------#
+            if enemy_player_count>=0:
+                laser.update()
+                enemy=create_enemy()
+                laser=create_laser()
+            else:
+                break
+    player.rect.x=player.rect.x+player_speed_x
+    player.rect.y=player.rect.y+player_speed_y
+    laser.rect.x=laser.rect.x+3        
+    laser2.rect.x=laser2.rect.x-3
+    if enemy.rect.x>=screen_width-80:
+        enemy.rect.x=screen_width-80
+    if enemy.rect.x<=20:
+        enemy.rect.x=20
+    #------collision---------enemy count-----------------------#
+    if pygame.sprite.groupcollide(player_laser,enemy_group,False,True):
+        enemy.update()
+        enemy_player_count=enemy_player_count-1
+     #---------------------------------bar to keep enemy count---------------------------
+    pygame.draw.rect(screen,(255,0,0),(170,10,(enemy_count_width*enemy_player_count),10))
+    #---------------------------------bar to keep life of player------------------------------------------------
+    text_enemy=font.render("Enemy Count Bar:",True,(0,0,0))
+    screen.blit(text_enemy,(0,0))
+    if pygame.sprite.spritecollideany(player,laser_enemy_group):
+        hit_count=hit_count+1
+        if hit_count%20==0:
+            life=life-1
+            print("hit")
+            print(life)
+        if life<=0:
+            player.update()
+            laser2.update()
+            break
+    text_player=font.render("Player's Health Bar:",True,(0,0,0))
+    screen.blit(text_player,(400,5))
+    pygame.draw.rect(screen,(255,255,255),(570,10,life_width*life,10))
+            
+    #---------------------------------------------------------------------------------------        
+    all_sprite.draw(screen)
+    pygame.display.update()
+
+
+
+
+
+
+
+
+#autorun
+    
+pygame.display.update()
+time.sleep(3)
+pygame.quit()
+sys.exit()
